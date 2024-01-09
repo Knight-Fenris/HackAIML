@@ -2,7 +2,8 @@ import json
 from llama_cpp import Llama
 
 print("loading model")
-llm = Llama(model_path="./models/pytorch_model-00001-of-00003.bin")
+llm = Llama(model_path="./models/vicuna-7b-v1.5.Q4_K_M.gguf")
+#change model
 print("loaded")
 
 prompt = "who u?"
