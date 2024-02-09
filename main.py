@@ -5,49 +5,56 @@ from llama_cpp import Llama
 
 # categories = list(pd.read_csv("Categories.csv", nrows=1))
 # print(categories)
-sentence = 'charity is for rich, I don’t care'
+sentence = 'sale 2 left! Hurry '
 
 
 # prompt = "Which of these categoires ({categories})) does {sentence} fall into"
-prompt = """Classify the following sentence into the following categories False Urgency,Basket Sneaking,Confirm Shaming,Forced Action,Subscription Trap,Interface interference,Bait and switch,Drip pricing,Disguised advertisement,Nagging, return the probability scores for the sentence, without text
-{sentence}
-"""
-prompt = prompt.format(sentence=sentence)
+prompt = """Classify the Input into these categories: False Urgency,Basket Sneaking,Confirm Shaming,Forced Action,Subscription Trap,Interface interference,Bait and switch,Drip pricing,Disguised advertisement,Nagging; by returning only 10 probability scores respectively; no text"""
 print(prompt)
 
+file1 = open('text_out.txt', 'r')
+lines = file1.readlines()
+file1.close()
 
-print("loading model")
-llm = Llama(model_path="./models/vicuna-13b-v1.5-16k.Q4_K_M.gguf")
+file1 = open("patterns.txt", "w")
+
+
+
+print("loading model")  
+llm = Llama(model_path="./models/vicuna-13b-v1.5.Q6_K.gguf")
 #change model
 print("loaded")
 
 
-# prompt = "Ill input sentences in the following prompts, return a heatmap in the form of a python list containing numbers between 0 and 1 according to the categories they belong in; the categories being: False Urgency,Basket Sneaking,Confirm Shaming,Forced Action,Subscription Trap,Interface interference,Bait and switch,Drip pricing,Disguised advertisement,Nagging"
-# prompt = ""
-
 print("running model")
-output = llm(
-    "Question: {prompt} Answer:".format(prompt=prompt),
-    max_tokens=100,
-    stop=["11.","Question:","Q:"],
-    echo=True,
-)
 
-print(json.dumps(output,indent=2))
+import re
 
-# print(llm.create_chat_completion(
-#         messages=[{
-#          "role": "user",
-#          "content": "what is the meaning of life?"
-#         }]))
+for i in lines:
+    sentence = i
+    output = llm(
+        "Instruction: {prompt} \nInput:{sentence} \nOutput: ".format(prompt=prompt,sentence=sentence),
+        max_tokens=100,
+        stop=["11.","Question:","Q:", "Instruction:", "Input:", "Output:"],
+        echo=True,
+        temperature=0.8,
+        top_p=0.8,
 
-# response = llm.create_chat_completion(
-#       messages = [
-#         {
-#           "role": "user",
-#           "content": "Extract Jason is 25 years old"
-#         }
-#       ]
-# )
+    )
 
-# print(response)
+    # ans = json.loads(json.dumps(output,indent=2))
+    #for new model run first command only then format
+    print(sentence)
+
+    ans = output["choices"][0]['text']
+    ans = ans.split("Output:",1)[1]
+    ans = ans.replace("\r", " ").replace("\n", " ")
+    # non_d = re.compile(r'[^\d.]+')
+    ans = re.sub(r'[^\d. ]+', '', ans)
+    ans = re.sub(' +', ' ', ans)
+    ans = ans.strip()
+    print(ans)
+    file1.write(ans + '\n')
+
+file1.close()
+# print(ans)
